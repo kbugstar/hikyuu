@@ -119,6 +119,7 @@ if not is_plat("windows") then
     add_ldflags("-pthread")
 end
 
+add_vectorexts("avx2")
 --add_vectorexts("sse", "sse2", "sse3", "ssse3", "mmx", "avx")
 
 add_subdirs("./hikyuu_cpp/hikyuu")

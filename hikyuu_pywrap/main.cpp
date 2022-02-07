@@ -8,6 +8,7 @@
 #include <cstdint>
 #include <boost/python.hpp>
 #include <hikyuu/hikyuu.h>
+#include <hikyuu/utilities/simd/simd_check.h>
 
 namespace py = boost::python;
 using namespace hku;
@@ -93,6 +94,8 @@ KData Py_GetKData(const string& market_code, py::object start = py::long_(0),
 }
 
 BOOST_PYTHON_MODULE(core) {
+    warn_about_unavailable_but_used_cpu_instructions();
+
     py::docstring_options doc_options;
     doc_options.disable_signatures();
 
