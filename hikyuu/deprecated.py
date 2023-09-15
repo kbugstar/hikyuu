@@ -641,7 +641,7 @@ def TradeManager_getattr(self, name):
     return getattr(self, name)
 
 
-TradeManager.__getattr__ = TradeManager_getattr
+TradeManagerBase.__getattr__ = TradeManager_getattr
 
 
 @deprecated_attr({'planPrice': 'plan_price', 'realPrice': 'real_price', 'goalPrice': 'goal_price'})

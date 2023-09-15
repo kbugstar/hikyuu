@@ -41,7 +41,7 @@ public:
 
     TradeManagerBase(const string& name, const TradeCostPtr& costFunc)
     : m_name(name), m_costfunc(costFunc), m_broker_last_datetime(Datetime::now()) {
-        setParam<int>("precision", 2);  //计算精度
+        setParam<int>("precision", 2);  // 计算精度
     }
 
     virtual ~TradeManagerBase() {}
@@ -176,10 +176,7 @@ public:
         return p;
     }
 
-    virtual shared_ptr<TradeManagerBase> _clone() {
-        HKU_WARN("The subclass does not implement a reset method");
-        return shared_ptr<TradeManagerBase>();
-    }
+    virtual shared_ptr<TradeManagerBase> _clone() = 0;
 
     /**
      * 注册订单代理

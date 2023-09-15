@@ -309,6 +309,13 @@ price_t TradeManager::getDebtCash(const Datetime& datetime) {
 TradeRecordList TradeManager::getTradeList(const Datetime& start_date,
                                            const Datetime& end_date) const {
     TradeRecordList result;
+
+    Datetime null_date = Null<Datetime>();
+    if (start_date == null_date && end_date == null_date) {
+        result = m_trade_list;
+        return result;
+    }
+
     HKU_IF_RETURN(start_date >= end_date, result);
 
     size_t total = m_trade_list.size();

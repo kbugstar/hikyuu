@@ -12,6 +12,162 @@
 
 using namespace boost::python;
 using namespace hku;
+namespace py = boost::python;
+
+class TradeManagerWrap : public TradeManagerBase, public wrapper<TradeManagerBase> {
+public:
+    TradeManagerWrap() : TradeManagerBase() {}
+    TradeManagerWrap(const string& name, const TradeCostPtr& costFunc)
+    : TradeManagerBase(name, costFunc) {}
+
+    void _reset() override {
+        if (override func = this->get_override("_reset")) {
+            func();
+        } else {
+            TradeManagerBase::_reset();
+        }
+    }
+
+    void default_reset() {
+        this->TradeManagerBase::_reset();
+    }
+
+    shared_ptr<TradeManagerBase> _clone() override {
+        return this->get_override("_clone")();
+    }
+
+    void updateWithWeight(const Datetime& datetime) override {
+        if (override func = this->get_override("update_with_weight")) {
+            func(datetime);
+        } else {
+            TradeManagerBase::updateWithWeight(datetime);
+        }
+    }
+
+    void default_updateWithWeight(const Datetime& datetime) {
+        this->TradeManagerBase::updateWithWeight(datetime);
+    }
+
+    price_t initCash() const override {
+        if (override func = this->get_override("init_cash"))
+            return func();
+        return TradeManagerBase::initCash();
+    }
+
+    price_t default_initCash() const {
+        return this->TradeManagerBase::initCash();
+    }
+
+    Datetime initDatetime() const override {
+        if (override func = this->get_override("init_datetime"))
+            return func();
+        return TradeManagerBase::initDatetime();
+    }
+
+    Datetime default_initDatetime() const {
+        return this->TradeManagerBase::initDatetime();
+    }
+
+    Datetime firstDatetime() const override {
+        if (override func = this->get_override("first_datetime"))
+            return func();
+        return TradeManagerBase::firstDatetime();
+    }
+
+    Datetime default_firstDatetime() const {
+        return this->TradeManagerBase::firstDatetime();
+    }
+
+    Datetime lastDatetime() const override {
+        if (override func = this->get_override("last_datetime"))
+            return func();
+        return TradeManagerBase::lastDatetime();
+    }
+
+    Datetime default_lastDatetime() const {
+        return this->TradeManagerBase::lastDatetime();
+    }
+
+    price_t currentCash() const override {
+        if (override func = this->get_override("current_cash"))
+            return func();
+        return TradeManagerBase::currentCash();
+    }
+
+    price_t default_currentCash() const {
+        return this->TradeManagerBase::currentCash();
+    }
+
+    bool have(const Stock& stock) const override {
+        if (override func = this->get_override("have"))
+            return func(stock);
+        return TradeManagerBase::have(stock);
+    }
+
+    bool default_have(const Stock& stock) const {
+        return this->TradeManagerBase::have(stock);
+    }
+
+    size_t getStockNumber() const override {
+        if (override func = this->get_override("get_stock_num"))
+            return func();
+        return TradeManagerBase::getStockNumber();
+    }
+
+    size_t default_getStockNumber() const {
+        return this->TradeManagerBase::getStockNumber();
+    }
+
+    double getHoldNumber(const Datetime& datetime, const Stock& stock) override {
+        if (override func = this->get_override("get_hold_num"))
+            return func(datetime, stock);
+        return TradeManagerBase::getHoldNumber(datetime, stock);
+    }
+
+    double default_getHoldNumber(const Datetime& datetime, const Stock& stock) {
+        return this->TradeManagerBase::getHoldNumber(datetime, stock);
+    }
+
+    TradeRecordList getTradeList(const Datetime& start, const Datetime& end) const override {
+        if (override func = this->get_override("get_trade_list"))
+            return func(start, end);
+        return TradeManagerBase::getTradeList(start, end);
+    }
+
+    TradeRecordList default_getTradeList(const Datetime& start, const Datetime& end) const {
+        return this->TradeManagerBase::getTradeList(start, end);
+    }
+
+    PositionRecordList getPositionList() const override {
+        if (override func = this->get_override("get_position_list"))
+            return func();
+        return TradeManagerBase::getPositionList();
+    }
+
+    PositionRecordList default_getPositionList() const {
+        return this->TradeManagerBase::getPositionList();
+    }
+
+    PositionRecordList getHistoryPositionList() const override {
+        if (override func = this->get_override("get_history_position_list"))
+            return func();
+        return TradeManagerBase::getHistoryPositionList();
+    }
+
+    PositionRecordList default_getHistoryPositionList() const {
+        return this->TradeManagerBase::getHistoryPositionList();
+    }
+
+    PositionRecord getPosition(const Datetime& date, const Stock& stock) override {
+        if (override func = this->get_override("get_position"))
+            return func(date, stock);
+        return TradeManagerBase::getPosition(date, stock);
+    }
+
+    PositionRecord default_getPosition(const Datetime& date, const Stock& stock) {
+        return this->TradeManagerBase::getPosition(date, stock);
+    }
+};
 
 FundsRecord (TradeManagerBase::*getFunds_1)(KQuery::KType) const = &TradeManagerBase::getFunds;
 FundsRecord (TradeManagerBase::*getFunds_2)(const Datetime&,
@@ -23,39 +179,50 @@ void (TradeManagerBase::*set_costFunc)(const TradeCostPtr&) = &TradeManagerBase:
 const string& (TradeManagerBase::*tm_get_name)() const = &TradeManagerBase::name;
 void (TradeManagerBase::*tm_set_name)(const string&) = &TradeManagerBase::name;
 
-TradeRecordList (TradeManagerBase::*_getTradeList_1)() const = &TradeManagerBase::getTradeList;
-TradeRecordList (TradeManagerBase::*_getTradeList_2)(const Datetime&, const Datetime&) const =
+TradeRecordList (TradeManagerBase::*_getTradeList)(const Datetime&, const Datetime&) const =
   &TradeManagerBase::getTradeList;
 
 void export_TradeManager() {
-    class_<TradeManagerBase>(
-      "TradeManager",
-      R"(交易管理类，可理解为一个模拟账户进行模拟交易。一般使用 crtTM 创建交易管理实例。
+    Datetime null_date = Null<Datetime>();
 
-交易管理可理解为一个模拟账户进行模拟交易。一般使用 crtTM 创建交易管理实例。
+    class_<TradeManagerWrap, boost::noncopyable>(
+      "TradeManagerBase",
+      R"(交易管理基类，用于自定义交易管理。
 
-公共参数：
+公共参数（是否使用，依赖于具体实现）：
 
     - reinvest=False (bool) : 红利是否再投资
     - precision=2 (int) : 价格计算精度
     - support_borrow_cash=False (bool) : 是否自动融资
     - support_borrow_stock=False (bool) : 是否自动融券
-    - save_action=True (bool) : 是否保存Python命令序列)",
-      // init<const Datetime&, price_t, const TradeCostPtr&, const string&>())
+    - save_action=True (bool) : 是否保存Python命令序列
+
+需继承实现的自定义接口：
+
+    - _clone: 克隆接口
+    - _reset: 复位实现接口
+    - update_with_weight: 根据权息信息更新数据
+    - init_cash: 获取初始资金
+    - current_cash: 获取当前资金
+    - init_datetime: 账户建立日期
+    - first_datetime: 获取第一笔买入交易发生日期，如未发生交易返回 Datetime>()
+    - last_datetime: 获取最后一笔交易日期，注意和交易类型无关，如未发生交易返回账户建立日期
+    - have: 当前是否持有指定的证券
+    - get_stock_num: 当前持有的证券种类数量，即当前持有几只股票（非各个股票的持仓数）
+    - get_hold_num: 获取指定时刻指定证券的持有数量
+    - get_trade_list: 获取交易记录
+    - get_position_list: 获取当前全部持仓记录
+    - get_history_position_list: 获取全部历史持仓记录，即已平仓记录
+    - get_position: 获取指定证券的当前持仓记录
+)",
       init<>())
+      .def(init<const string&, const TradeCostPtr&>())
 
       .def("__str__", &TradeManagerBase::str)
       .def("__repr__", &TradeManagerBase::str)
 
       .add_property("name", make_function(tm_get_name, return_value_policy<copy_const_reference>()),
                     tm_set_name, "名称")
-      .add_property("init_cash", &TradeManagerBase::initCash, "（只读）初始资金")
-      .add_property("current_cash", &TradeManagerBase::currentCash, "（只读）当前资金")
-      .add_property("init_datetime", &TradeManagerBase::initDatetime, "（只读）账户建立日期")
-      .add_property("first_datetime", &TradeManagerBase::firstDatetime,
-                    "（只读）第一笔买入交易发生日期，如未发生交易返回 Datetime>()")
-      .add_property("last_datetime", &TradeManagerBase::lastDatetime,
-                    "（只读）最后一笔交易日期，注意和交易类型无关，如未发生交易返回账户建立日期")
       .add_property("precision", &TradeManagerBase::precision,
                     "（只读）价格精度，同公共参数“precision”")
       .add_property("cost_func", get_costFunc, set_costFunc, "交易成本算法")
@@ -65,6 +232,19 @@ void export_TradeManager() {
         
     默认情况下，TradeManager会在执行买入/卖出操作时，调用订单代理执行代理的买入/卖出动作，但这样在实盘操作时会存在问题。因为系统在计算信号指示时，需要回溯历史数据才能得到最新的信号，这样TradeManager会在历史时刻就执行买入/卖出操作，此时如果订单代理本身没有对发出买入/卖出指令的时刻进行控制，会导致代理发送错误的指令。此时，需要指定在某一个时刻之后，才允许指定订单代理的买入/卖出操作。属性 brokeLastDatetime 即用于指定该时刻。)")
 
+      .def("init_cash", &TradeManagerBase::initCash, &TradeManagerWrap::default_initCash,
+           "获取初始资金")
+      .def("current_cash", &TradeManagerBase::currentCash, &TradeManagerWrap::default_currentCash,
+           "获取当前资金")
+      .def("init_datetime", &TradeManagerBase::initDatetime,
+           &TradeManagerWrap::default_initDatetime, "账户建立日期")
+      .def("first_datetime", &TradeManagerBase::firstDatetime,
+           &TradeManagerWrap::default_firstDatetime,
+           "获取第一笔买入交易发生日期，如未发生交易返回 Datetime>()")
+      .def("last_datetime", &TradeManagerBase::lastDatetime,
+           &TradeManagerWrap::default_lastDatetime,
+           "获取最后一笔交易日期，注意和交易类型无关，如未发生交易返回账户建立日期")
+
       .def("getParam", &TradeManagerBase::getParam<boost::any>, R"(get_param(self, name)
 
     获取指定的参数
@@ -73,7 +253,8 @@ void export_TradeManager() {
     :return: 参数值
     :raises out_of_range: 无此参数)")
 
-      .def("set_param", &TradeManagerBase::setParam<object>, R"(set_param(self, name, value)
+      .def("set_param", &TradeManagerBase::setParam<object>,
+           R"(set_param(self, name, value)
 
     设置参数
 
@@ -86,6 +267,9 @@ void export_TradeManager() {
 
       .def("reset", &TradeManagerBase::reset, "复位，清空交易、持仓记录")
       .def("clone", &TradeManagerBase::clone, "克隆（深复制）实例")
+      .def("_reset", &TradeManagerBase::_reset, &TradeManagerWrap::default_reset,
+           "【重载接口】子类复位接口，复位内部私有变量")
+      .def("_clone", pure_virtual(&TradeManagerBase::_clone), "【重载接口】子类克隆接口")
 
       .def("reg_broker", &TradeManagerBase::regBroker, R"(reg_broker(self, broker)
     
@@ -99,14 +283,15 @@ void export_TradeManager() {
 
       //.def("getMarginRate", &TradeManager::getMarginRate)
 
-      .def("have", &TradeManagerBase::have, R"(have(self, stock)
+      .def("have", &TradeManagerBase::have, &TradeManagerWrap::default_have, R"(have(self, stock)
 
     当前是否持有指定的证券
 
     :param Stock stock: 指定证券
     :rtype: bool)")
 
-      .def("get_stock_num", &TradeManagerBase::getStockNumber, R"(get_stock_num(self)
+      .def("get_stock_num", &TradeManagerBase::getStockNumber,
+           &TradeManagerWrap::default_getStockNumber, R"(get_stock_num(self)
 
     当前持有的证券种类数量，即当前持有几只股票（非各个股票的持仓数）
 
@@ -114,7 +299,9 @@ void export_TradeManager() {
 
       //.def("getShortStockNumber", &TradeManager::getShortStockNumber)
 
-      .def("get_hold_num", &TradeManagerBase::getHoldNumber, R"(get_hold_num(self, datetime, stock)
+      .def("get_hold_num", &TradeManagerBase::getHoldNumber,
+           &TradeManagerWrap::default_getHoldNumber,
+           R"(get_hold_num(self, datetime, stock)
 
         获取指定时刻指定证券的持有数量
         
@@ -124,8 +311,9 @@ void export_TradeManager() {
 
       //.def("getShortHoldNumber", &TradeManager::getShortHoldNumber)
 
-      .def("get_trade_list", _getTradeList_1)
-      .def("get_trade_list", _getTradeList_2, R"(get_trade_list(self[, start, end])
+      .def("get_trade_list", _getTradeList, &TradeManagerWrap::getTradeList,
+           (arg("start") = null_date, arg("end") = null_date),
+           R"(get_trade_list(self[, start, end])
 
     获取交易记录，未指定参数时，获取全部交易记录
 
@@ -133,20 +321,24 @@ void export_TradeManager() {
     :param Datetime end: 结束日期
     :rtype: TradeRecordList)")
 
-      .def("get_position_list", &TradeManagerBase::getPositionList, R"(get_position_list(self)
+      .def("get_position_list", &TradeManagerBase::getPositionList,
+           &TradeManagerWrap::default_getPositionList,
+           R"(get_position_list(self)
 
     获取当前全部持仓记录
 
     :rtype: PositionRecordList)")
 
       .def("get_history_position_list", &TradeManagerBase::getHistoryPositionList,
+           &TradeManagerWrap::default_getHistoryPositionList,
            R"(get_history_position_list(self)
 
     获取全部历史持仓记录，即已平仓记录
 
     :rtype: PositionRecordList)")
 
-      .def("get_position", &TradeManagerBase::getPosition, R"(get_position(self, stock)
+      .def("get_position", &TradeManagerBase::getPosition, &TradeManagerWrap::default_getPosition,
+           R"(get_position(self, stock)
 
     获取指定证券的当前持仓记录，如当前未持有该票，返回PositionRecord()
 
@@ -283,12 +475,14 @@ void export_TradeManager() {
     :param float plan_price:  原计划卖出价格
     :param SystemPart part:   交易指示来源
     :rtype: TradeRecord)")
-      // sell_overload(args("datetime", "stock", "realPrice", "num", "stoploss", "goalPrice",
+      // sell_overload(args("datetime", "stock", "realPrice", "num", "stoploss",
+      // "goalPrice",
       //                   "planPrice", "part")))
       //.def("buyShort", &TradeManager::buyShort, buyShort_overload())
       //.def("sellShort", &TradeManager::sellShort, sellShort_overload())
 
-      .def("add_trade_record", &TradeManagerBase::addTradeRecord, R"(add_trade_record(self, tr)
+      .def("add_trade_record", &TradeManagerBase::addTradeRecord,
+           R"(add_trade_record(self, tr)
 
     直接加入交易记录，如果加入初始化账户记录，将清除全部已有交易及持仓记录。
 
@@ -302,7 +496,8 @@ void export_TradeManager() {
 
     :param str path: 输出文件所在目录)")
 
-      .def("update_with_weight", &TradeManager::updateWithWeight, R"(update_with_weight(self, date)
+      .def("update_with_weight", &TradeManagerBase::updateWithWeight,
+           &TradeManagerWrap::default_updateWithWeight, R"(update_with_weight(self, date)
 
     根据权息信息更新当前持仓及交易记录，必须按时间顺序被调用
 
